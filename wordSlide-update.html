@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script>
+	window.onload = function () {
+		mv.app.slider();
+	}
+
+	var mv={};
+
+	mv.app={};
+	mv.ui={};
+
+	mv.app.slider = function () {
+		var oDiv = document.getElementById('container');
+		var oUl = oDiv.getElementsByTagName('ul')[0];
+		oUl.innerHTML += oUl.innerHTML;	//复制一份innerHTML
+		var aLi = oUl.getElementsByTagName('li');
+		//一个li的宽度,把margin也包进去
+		var liWidth = aLi[0].offsetWidth + 2 * parseInt(window.getComputedStyle(aLi[0], null).marginLeft);
+		var liLength = aLi.length;
+
+		oUl.style.width = liWidth * aLi.length + 'px';	//设定ul的宽度
+	
+		mv.ui.move(oUl, liWidth, liLength);
+
+		var oNext = document.getElementById('next');
+		oNext.onclick = function () {
+			//把前面的定时器要先清除
+			window.cancelAnimationFrame(mv.ui.moveTimer);
+			window.clearTimeout(mv.ui.pauseTimer);
+			mv.ui.move(oUl, liWidth, liLength, true);
+		/*拆分出来的
+			window.cancelAnimationFrame(mv.ui.moveRightTimer);
+			window.clearTimeout(mv.ui.pauseRightTimer);
+			window.cancelAnimationFrame(mv.ui.moveLeftTimer);
+			window.clearTimeout(mv.ui.pauseLeftTimer);
+			mv.ui.moveLeft(oUl, liWidth, liLength);
+		*/
+		};
+
+		var oPrev = document.getElementById('prev');
+		oPrev.onclick = function () {
+			window.cancelAnimationFrame(mv.ui.moveTimer);
+			window.clearTimeout(mv.ui.pauseTimer);
+			mv.ui.move(oUl, liWidth, liLength, false);
+		/*
+			window.cancelAnimationFrame(mv.ui.moveRightTimer);
+			window.clearTimeout(mv.ui.pauseRightTimer);
+			window.cancelAnimationFrame(mv.ui.moveLeftTimer);
+			window.clearTimeout(mv.ui.pauseLeftTimer);
+			mv.ui.moveRight(oUl, liWidth, liLength);
+		*/
+		};
+	}
+
+	//obj为移动的对象，width为每次移动的距离，也就是li的宽度，length为移动的li的数量，isLeft看是否向左移动
+	//这个是点击箭头后方向永久改变
+	mv.ui.move = function (obj, width, length, isLeft) {
+		//注意offsetLeft与style.left
+		//direction：移动方向
+		//initPositionValue：初始的位置值，left为0，right为总宽度除以2
+		//initPositionKey：初始位置的键，left为0，right为总长度除以2
+		//changePositionKey：为边界的键，left为总长度除以2，right为0
+		//i：表示移动到第几个键
+		var direction, initPositionValue, initPositionKey, changePositionKey, i;
+		var halfTotalLength = length / 2 * width;
+		if (typeof isLeft == 'undefined') {	//为了不让滑动在网页加载后立刻执行
+			direction = -1;
+			initPositionValue = 0;
+			initPositionKey = 0;
+			changePositionKey = -length / 2;
+			i = 0;
+			this.interval = 1000;	//每次移动的时间间隔，初始为1s
+		} else if (isLeft == true) {
+			direction = -1;
+			initPositionValue = 0;
+			initPositionKey = 0;
+			changePositionKey = -length / 2;
+			if (obj.offsetLeft == -halfTotalLength) {
+				obj.style.left = 0 + 'px';
+			}
+			i = Math.ceil(obj.offsetLeft / 275) - 1;
+			this.interval = 3000;	//点击后移动时间间隔变成3s
+		} else if (isLeft == false) {
+			direction = 1;
+			initPositionValue = -length / 2 * width;
+			initPositionKey = -length / 2;
+			changePositionKey = 0;
+			if (obj.offsetLeft == 0) {
+				obj.style.left = -halfTotalLength + 'px';
+			}
+			i = Math.floor(obj.offsetLeft / 275) + 1;	// 注意i的顺序，放在if后面
+			this.interval = 3000;
+		}
+
+		var target = width * i;	//目标位置
+
+		var _this = this;
+		this.moveTimer = window.requestAnimationFrame(function slide() {
+			if (obj.offsetLeft != target) {
+				//让移动越来越慢 target - obj.offsetLeft) / 15
+				obj.style.left = obj.offsetLeft + Math.ceil(Math.abs((target - obj.offsetLeft) / 15)) * direction + 'px';
+				_this.moveTimer = window.requestAnimationFrame(slide);
+			} else {
+				if (i == changePositionKey) {	//到达边界，返回初始值
+					obj.style.left = initPositionValue + 'px';
+					i = initPositionKey;
+				} else {	//改动目标的键
+					i += direction;
+				}
+
+				target = width * i;
+				_this.pauseTimer = setTimeout(slide, _this.interval);
+				_this.interval = 1000;	//重新把移动的时间间隔变成1s
+			}
+		});
+	};
+
+	//这个是点击箭头后立刻向右，之后3秒后重新恢复原有速度1秒1秒向左，就是把上面那个拆分开来，可读性高些
+	mv.ui.moveRight = function (obj, width, length) {
+		var halfTotalLength = length / 2 * width;
+
+		if (obj.offsetLeft == 0) {
+			obj.style.left = -halfTotalLength + 'px';
+		}
+
+		var i = Math.floor(obj.offsetLeft / 275) + 1;
+
+		var target = width * i;
+
+		var _this = this;
+
+		this.moveRightTimer = window.requestAnimationFrame(function slide() {
+			if (obj.offsetLeft != target) {
+				obj.style.left = obj.offsetLeft + Math.ceil((target - obj.offsetLeft) / 15) + 'px';
+				_this.moveRightTimer = window.requestAnimationFrame(slide);
+			} else {
+				_this.pauseRightTimer = setTimeout(function () {
+					mv.ui.move(obj, width, length, true);
+				}, 3000);
+			}
+		});
+	};
+	//和上面那个一样
+	mv.ui.moveLeft = function (obj, width, length) {
+		var halfTotalLength = length / 2 * width;
+
+		if (obj.offsetLeft == -halfTotalLength) {
+			obj.style.left = 0 + 'px';
+		}
+
+		var i = Math.ceil(obj.offsetLeft / 275) - 1;
+
+		var target = width * i;
+
+		var _this = this;
+
+		this.moveLeftTimer = window.requestAnimationFrame(function slide() {
+			if (obj.offsetLeft != target) {
+				obj.style.left = obj.offsetLeft + Math.floor((target - obj.offsetLeft) / 15) + 'px';
+				_this.moveLeftTimer = window.requestAnimationFrame(slide);
+			} else {
+				_this.pauseLeftTimer = setTimeout(function () {
+					mv.ui.move(obj, width, length, true);
+				}, 3000);
+			}
+		});
+	};
+</script>
+
+<style>
+	#bottom {
+		width: 1200px;
+		height: 30px;
+		margin: 120px auto;
+		position: relative;
+	}
+	#prev, #next {
+		cursor: pointer;
+		position: absolute;
+		background: black;
+		color: #fff;
+		font-size: 20px;
+		text-align: center;
+		width: 36px;
+		height: 30px;
+		line-height: 30px;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-o-user-select: none;
+		user-select: none;
+	}
+	#prev {
+		left: 0px;
+		bottom: 0px;
+	}
+	#next {
+		right: 0px;
+		bottom: 0px;
+	}
+	#container {
+		width: 1100px;
+		height: 30px;
+		margin: 0px auto;
+		overflow: hidden;
+		position: relative;	/*注意此处，需要有相对定位，因为offset与left都是相对已经定位的父元素定位的*/
+	}
+	#container ul {
+		padding: 0px;
+		margin: 0px auto;
+		position: relative;
+	}
+	#container li {
+		margin: 0px 1px;
+		width: 273px;
+		float: left;
+		display: inline-block;
+		background: black;
+		opacity: 0.8;
+		color: #fff;
+		text-align: center;
+		height: 30px;
+		line-height:30px;
+	}
+</style>
+</head>
+<body>
+	<div id="bottom">
+		<div id="prev">←</div>
+		<div id="container">
+			<ul>
+				<li>1</li>
+				<li>2</li>
+				<li>3</li>
+				<li>4</li>
+				<li>5</li>
+				<li>6</li>
+			</ul>
+		</div>
+		<div id="next">→</div>
+	</div>
+</body>
+</html>
