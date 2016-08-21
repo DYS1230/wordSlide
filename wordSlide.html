@@ -3,113 +3,128 @@
 <head>
 <meta charset="utf-8" />
 <script>
-
-window.onload=function()
-{
-	mv.app.slider();
-}
-
-var mv={};
-
-mv.app={};
-mv.ui={};
-mv.app.slider=function()
-{
-	var oDiv=document.getElementById("container");
-	var oUl=oDiv.getElementsByTagName("ul")[0];
-	var aLi=oUl.getElementsByTagName("li");
-
+	window.onload = function () {
+		mv.app.slider();
+	}
 	
-	oUl.style.width=aLi[0].offsetWidth * aLi. length +'px'; //设定ul的宽度
-	
-	
-	var timee=null; //两个定时器
-	var timer=null; 
-	var i=1;
-	var iTarget=aLi[0].offsetWidth * i * (-1); //一次移动的距离
-	
-	timee=setTimeout(function(){
-		timer=setInterval(move,50)	//不断移动
-		},3000);
-	
-	function move()
-	{
+	var mv={};
 
-		if(oUl.offsetLeft!=iTarget)
-		{
-			mv.ui.moveLeft(oUl,iTarget);
-		}
-		else
-		{
-			if(i==aLi.length / 2)
-			{
-				i=1;
-				oUl.style.left=0 +"px";	
-				iTarget=aLi[0].offsetWidth * i * (-1);
-				
-			}
-			else
-			{
-				i+=1;
-				iTarget=aLi[0].offsetWidth * i * (-1);		
-			}
-			clearInterval(timer);
-			timee=setTimeout(timer=setInterval(move,50),1000);
-		}
+	mv.app={};
+	mv.ui={};
+	
+	mv.app.slider = function () {
+		var oDiv = document.getElementById('container');
+		var oUl = oDiv.getElementsByTagName('ul')[0];
+		oUl.innerHTML += oUl.innerHTML;
+		var aLi = oUl.getElementsByTagName('li');
+		var liWidth = aLi[0].offsetWidth + 2 * parseInt(window.getComputedStyle(aLi[0], null).marginLeft);
+		var liLength = aLi.length;
+
+		oUl.style.width = liWidth * aLi.length + 'px';	//设定ul的宽度
+	
+		var i = 1;
+		var iTarget = liWidth * i * (-1);
 		
-	}	
-	
+		var firstTimer = setInterval(move, 17);
+		
+		function move()
+		{
+			if (oUl.offsetLeft != iTarget) {
+				mv.ui.moveLeft(oUl,iTarget);
+			} else {
+				if (i == liLength / 2) {
+					i = 1;
+					oUl.style.left = 0 + 'px';	
+				} else {
+					i += 1;
+				}
+				iTarget = liWidth * i * (-1);
+				clearInterval(firstTimer);
+				setTimeout( function () {
+					firstTimer = setInterval(move, 17)
+				}, 1000);
+			}
+			
+		}
+	}
 
-}
-
-mv.ui.moveLeft=function(obj,iTarget)
-{
-	var iSpeed=(iTarget-obj.offsetLeft)/6;
-	iSpeed=Math.floor(iSpeed);
-	obj.style.left=obj.offsetLeft + iSpeed + 'px';
-}
+	mv.ui.moveLeft = function (obj,iTarget) {
+		var iSpeed = (iTarget - obj.offsetLeft) / 15;
+		iSpeed = Math.floor(iSpeed);
+		obj.style.left = obj.offsetLeft + iSpeed + 'px';
+	}
 </script>
 
 <style>
-*{margin:0; padding:0; list-style:none;}
-#bottom{width:1200px; height:30px; margin:120px auto; position:relative;}
-#prev, #next{background:black; color:#fff; font-size: 12px; line-height:30px; text-align:center; width:36px; height:30px;}
-
-#prev{ position:absolute; left:0px; bottom:0px;}
-#next{ position:absolute; right:0px;  bottom:0px;}
-#container{width:1128px; height:30px;  margin:0px auto; overflow:hidden; position:relative;}
-
-#container ul{ height:30px;  position:relative; list-style:none; }
-#container li{width: 282px; float:left;}
-#container li p{display:inline-block; float:left; width: 280px; height:30px; background:black; 
-				opacity:0.8; color:#fff; text-align:center;
-			  list-style:none; margin:0px 1px; line-height:30px;}
+	#bottom {
+		width: 1200px;
+		height: 30px;
+		margin: 120px auto;
+		position: relative;
+	}
+	#prev, #next {
+		cursor: pointer;
+		position: absolute;
+		background: black;
+		color: #fff;
+		font-size: 20px;
+		text-align: center;
+		width: 36px;
+		height: 30px;
+		line-height: 30px;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-o-user-select: none;
+		user-select: none;
+	}
+	#prev {
+		left: 0px;
+		bottom: 0px;
+	}
+	#next {
+		right: 0px;
+		bottom: 0px;
+	}
+	#container {
+		width: 1100px;
+		height: 30px;
+		margin: 0px auto;
+		overflow: hidden;
+		position: relative;	/*注意此处，需要有相对定位，因为offset与left都是相对已经定位的父元素定位的*/
+	}
+	#container ul {
+		padding: 0px;
+		margin: 0px auto;
+		position: relative;
+	}
+	#container li {
+		margin: 0px 1px;
+		width: 273px;
+		float: left;
+		display: inline-block;
+		background: black;
+		opacity: 0.8;
+		color: #fff;
+		text-align: center;
+		height: 30px;
+		line-height:30px;
+	}
 </style>
 </head>
 <body>
-				<div id="bottom" >
-					<div id="prev">←</div>
-					<div id="container">
-						<ul>
-							<li><p>学院xxxxxx</p></li>
-							<li><p>辽宁女排xxxxxx</p></li>
-							<li><p>2015年12月27日x</p></li>
-							<li><p>大学贯彻落实</p></li>
-							<li><p>学院xxxxxx</p></li>
-							<li><p>辽宁女排xxxxxx</p></li>
-							<li><p>2015年12月27日x</p></li>
-							<li><p>大学贯彻落实</p></li>
-							<li><p>学院xxxxxx</p></li>
-							<li><p>辽宁女排xxxxxx</p></li>
-							<li><p>2015年12月27日x</p></li>
-							<li><p>大学贯彻落实</p></li>
-							<li><p>学院xxxxxx</p></li>
-							<li><p>辽宁女排xxxxxx</p></li>
-							<li><p>2015年12月27日x</p></li>
-							<li><p>大学贯彻落实</p></li>
-						</ul>
-					</div>
-					<div id="next">→</div>
-				</div>
+	<div id="bottom">
+		<div id="prev">←</div>
+		<div id="container">
+			<ul>
+				<li>1</li>
+				<li>2</li>
+				<li>3</li>
+				<li>4</li>
+				<li>5</li>
+				<li>6</li>
+			</ul>
+		</div>
+		<div id="next">→</div>
+	</div>
 </body>
 </html>
